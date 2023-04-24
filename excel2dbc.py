@@ -121,7 +121,7 @@ class ExcelLoad(object):
                 if noRowData[rowSgDataType] == "signed":
                     SignalDataType = "-"
                     SignalMin = ((-pow(2,SignalBitLenth-1))*SignalFactor + SignalOffset) if isEmpty(noRowData[rowSgMin]) else getVal(noRowData[rowSgMin])
-                    SignalMax = ((pow(2, SignalBitLenth-1)-1)*SignalFactor + SignalOffset) if isEmpty(noRowData[rowSgMin]) else getVal(noRowData[rowSgMax])
+                    SignalMax = ((pow(2, SignalBitLenth-1)-1)*SignalFactor + SignalOffset) if isEmpty(noRowData[rowSgMax]) else getVal(noRowData[rowSgMax])
                 else:
                     SignalDataType = "+"
                     SignalMin = SignalOffset if isEmpty(noRowData[rowSgMin]) else getVal(noRowData[rowSgMin])
