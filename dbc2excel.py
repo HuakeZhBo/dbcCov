@@ -177,7 +177,10 @@ class DbcLoad(object):
                     ##构造bo字典
                     bo_dict = {}
                     bo_dict['type'] = bo_line[location_of_bo_type]
-                    bo_dict['message_id'] = int(bo_line[location_of_bo_id])
+                    numID = eval(bo_line[location_of_bo_id])
+                    if numID > 0x7ff:
+                        numID = numID & ~(1 << 31)
+                    bo_dict['message_id'] = int(numID)
                     bo_dict['message_name'] = re.sub(':', '', bo_line[location_of_bo_message_name])
                     bo_dict['message_size'] = int(bo_line[location_of_bo_dlc])
                     bo_dict['transmitter'] = bo_line[location_of_bo_transmitter]

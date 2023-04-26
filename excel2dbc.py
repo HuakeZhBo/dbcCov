@@ -99,7 +99,10 @@ class ExcelLoad(object):
             noRow+=1
 
             if noRowData[0] != "":
-                intID = str(eval(noRowData[rowID]))
+                numID = eval(noRowData[rowID])
+                if numID > 0x7ff:
+                    numID = numID | (1 << 31)
+                intID = str(numID)
                 MsgName = noRowData[rowMsgName]+":"
                 MsgDlc = str(int(noRowData[rowMsgDlc]))
                 nodeIndex = 0
@@ -158,7 +161,10 @@ class ExcelLoad(object):
         while noRow < self.matrixTable.nrows:
             noRowData = self.matrixTable.row_values(noRow)
             if noRowData[rowMsgName] != "":
-                intID = str(eval(noRowData[rowID]))
+                numID = eval(noRowData[rowID])
+                if numID > 0x7ff:
+                    numID = numID | (1 << 31)
+                intID = str(numID)
             elif noRowData[rowSgDescription] != "":
                 SignalName = noRowData[rowSgName]
                 SignalDescribe = "\"" + noRowData[rowSgDescription]+ "\";\n"
