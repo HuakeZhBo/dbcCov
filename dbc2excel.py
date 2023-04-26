@@ -177,10 +177,7 @@ class DbcLoad(object):
                     ##构造bo字典
                     bo_dict = {}
                     bo_dict['type'] = bo_line[location_of_bo_type]
-                    numID = eval(bo_line[location_of_bo_id])
-                    if numID > 0x7ff:
-                        numID = numID & ~(1 << 31)
-                    bo_dict['message_id'] = int(numID)
+                    bo_dict['message_id'] = int(bo_line[location_of_bo_id])
                     bo_dict['message_name'] = re.sub(':', '', bo_line[location_of_bo_message_name])
                     bo_dict['message_size'] = int(bo_line[location_of_bo_dlc])
                     bo_dict['transmitter'] = bo_line[location_of_bo_transmitter]
@@ -614,10 +611,14 @@ class DbcLoad(object):
                 if 'message_id' in bo_unit:
                     row_counter = row_counter + 1
                     msg_sheet.write(title_row + row_counter, 0, bo_unit['message_name'], set_style(0x0D, True, True))
-                    msg_sheet.write(title_row + row_counter, 1, 'normal', set_style(0x28, True, True))
+                    if bo_unit['message_id'] > 0x7ff:
+                        msg_sheet.write(title_row + row_counter, 1, 'Extended', set_style(0x28, True, True))
+                        bo_unit['message_id'] = bo_unit['message_id'] & ~(1 << 31)
+                    else:
+                        msg_sheet.write(title_row + row_counter, 1, 'Standard', set_style(0x28, True, True))
                     msg_sheet.write(title_row + row_counter, 2, str(hex(bo_unit['message_id'])), set_style(0x0D, True, True))
                     if 'cycle_time' in bo_unit:
-                        msg_sheet.write(title_row + row_counter, 3, 'cycle', set_style(0x28, True, True))
+                        msg_sheet.write(title_row + row_counter, 3, 'Periodic', set_style(0x28, True, True))
                         msg_sheet.write(title_row + row_counter, 4, bo_unit['cycle_time'], set_style(0x0D, True, True))
                     else:
                         msg_sheet.write(title_row + row_counter, 3, 'NULL', set_style(0x28, True, True))

@@ -51,5 +51,7 @@ BO_ 2553802994 BMS_37F0: 8 BMS
 CM_ BU_ BMS "电池管理系统";
 CM_ BU_ VCU "整车控制器";
 BA_DEF_  "BusType" STRING ;
+BA_DEF_ BO_ "GenMsgCycleTime" INT 0 65535;
 BA_DEF_DEF_  "BusType" "CAN";
-
+BA_ "GenMsgCycleTime" BO_ 2551313136 100 ;
+BA_ "GenMsgCycleTime" BO_ 2553802994 200 ;

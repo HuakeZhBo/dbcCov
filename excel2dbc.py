@@ -31,24 +31,26 @@ dbcHeaderContext="VERSION \"\"\n\n\nNS_ :\n\tNS_DESC_\n\
 	SG_MUL_VAL_\n\n\
 BS_:\n\n"
 
-dbcEOFContext = "BA_DEF_  \"BusType\" STRING ;\n\
-BA_DEF_DEF_  \"BusType\" \"CAN\";\n\n"
+dbcBADEFContext = "BA_DEF_  \"BusType\" STRING ;\nBA_DEF_ BO_ \"GenMsgCycleTime\" INT 0 65535;\n"
+dbcBADEFDEFContext = "BA_DEF_DEF_  \"BusType\" \"CAN\";\n"
 
-rowMsgName = 0
-rowID = 2
-rowMsgDlc = 5
-rowSgName = 6
-rowSgDescription = 7
-rowSgByteOrder = 8
-rowSgStartBit = 10
-rowSgBitLen = 12
-rowSgDataType = 13
-rowSgFactor = 14
-rowSgOffset = 15
-rowSgMin = 16
-rowSgMax = 17
-rowSgUnit = 23
-rowNodeStart = 28
+colMsgName = 0
+colID = 2
+colMsgSendType = 3
+colMsgSendCycle = 4
+colMsgDlc = 5
+colSgName = 6
+colSgDescription = 7
+colSgByteOrder = 8
+colSgStartBit = 10
+colSgBitLen = 12
+colSgDataType = 13
+colSgFactor = 14
+colSgOffset = 15
+colSgMin = 16
+colSgMax = 17
+colSgUnit = 23
+colNodeStart = 28
 
 def isEmpty(x):
     if x == '/' or x == '':
@@ -92,44 +94,44 @@ class ExcelLoad(object):
         nodeContext = " ".join([nodeContext, '\n\n'])
         self.dbc_fd.write(nodeContext)
 
-        nodes = self.matrixTable.row_values(0)[rowNodeStart:]
+        nodes = self.matrixTable.row_values(0)[colNodeStart:]
         noRow = 1
         while noRow < self.matrixTable.nrows:
             noRowData = self.matrixTable.row_values(noRow)
             noRow+=1
 
             if noRowData[0] != "":
-                numID = eval(noRowData[rowID])
+                numID = eval(noRowData[colID])
                 if numID > 0x7ff:
                     numID = numID | (1 << 31)
-                intID = str(numID)
-                MsgName = noRowData[rowMsgName]+":"
-                MsgDlc = str(int(noRowData[rowMsgDlc]))
+                canID = str(numID)
+                MsgName = noRowData[colMsgName]+":"
+                MsgDlc = str(int(noRowData[colMsgDlc]))
                 nodeIndex = 0
-                for iter in noRowData[rowNodeStart:]:
+                for iter in noRowData[colNodeStart:]:
                     if(iter == 'S'):
                         node = nodes[nodeIndex] + "\n"
                         break
                     nodeIndex += 1
-                BOContext = " ".join(["\nBO_", intID, MsgName, MsgDlc, node])
+                BOContext = " ".join(["\nBO_", canID, MsgName, MsgDlc, node])
                 self.dbc_fd.write(BOContext)
             else:
                 # 信号属性获取
-                SignalName = re.sub("\W+","",noRowData[rowSgName])
-                SignalStartBit = int(noRowData[rowSgStartBit])
-                SignalBitLenth = int(noRowData[rowSgBitLen])
-                SignalOffset = 0 if isEmpty(noRowData[rowSgOffset]) else getVal(noRowData[rowSgOffset])
-                SignalByteOrder = "1" if noRowData[rowSgByteOrder] == "Intel" else "0"
-                SignalFactor = 1 if isEmpty(noRowData[rowSgFactor]) else getVal(noRowData[rowSgFactor])
-                if noRowData[rowSgDataType] == "signed":
+                SignalName = re.sub("\W+","",noRowData[colSgName])
+                SignalStartBit = int(noRowData[colSgStartBit])
+                SignalBitLenth = int(noRowData[colSgBitLen])
+                SignalOffset = 0 if isEmpty(noRowData[colSgOffset]) else getVal(noRowData[colSgOffset])
+                SignalByteOrder = "1" if noRowData[colSgByteOrder] == "Intel" else "0"
+                SignalFactor = 1 if isEmpty(noRowData[colSgFactor]) else getVal(noRowData[colSgFactor])
+                if noRowData[colSgDataType] == "signed":
                     SignalDataType = "-"
-                    SignalMin = ((-pow(2,SignalBitLenth-1))*SignalFactor + SignalOffset) if isEmpty(noRowData[rowSgMin]) else getVal(noRowData[rowSgMin])
-                    SignalMax = ((pow(2, SignalBitLenth-1)-1)*SignalFactor + SignalOffset) if isEmpty(noRowData[rowSgMax]) else getVal(noRowData[rowSgMax])
+                    SignalMin = ((-pow(2,SignalBitLenth-1))*SignalFactor + SignalOffset) if isEmpty(noRowData[colSgMin]) else getVal(noRowData[colSgMin])
+                    SignalMax = ((pow(2, SignalBitLenth-1)-1)*SignalFactor + SignalOffset) if isEmpty(noRowData[colSgMax]) else getVal(noRowData[colSgMax])
                 else:
                     SignalDataType = "+"
-                    SignalMin = SignalOffset if isEmpty(noRowData[rowSgMin]) else getVal(noRowData[rowSgMin])
-                    SignalMax = ((pow(2, SignalBitLenth)-1)*SignalFactor + SignalOffset) if isEmpty(noRowData[rowSgMax]) else getVal(noRowData[rowSgMax])
-                SignalUnit = "\"" + getUnit(noRowData[rowSgUnit]) + "\""
+                    SignalMin = SignalOffset if isEmpty(noRowData[colSgMin]) else getVal(noRowData[colSgMin])
+                    SignalMax = ((pow(2, SignalBitLenth)-1)*SignalFactor + SignalOffset) if isEmpty(noRowData[colSgMax]) else getVal(noRowData[colSgMax])
+                SignalUnit = "\"" + getUnit(noRowData[colSgUnit]) + "\""
                 # 预处理
                 bitContext = str(SignalStartBit) + "|" + str(SignalBitLenth) + "@" + SignalByteOrder + SignalDataType
                 # valueContext = "(" + str(SignalFactor) + "," + str(SignalOffset) + ")"
@@ -137,7 +139,7 @@ class ExcelLoad(object):
                 valueContext = "({:g},{:g})".format(SignalFactor, SignalOffset)
                 limitContext = "[{:g}|{:g}]".format(SignalMin, SignalMax)
                 nodeIndex = 0
-                for iter in noRowData[rowNodeStart:]:
+                for iter in noRowData[colNodeStart:]:
                     if(iter == 'R'):
                         node = nodes[nodeIndex] + "\n"
                         break
@@ -160,19 +162,34 @@ class ExcelLoad(object):
         noRow = 1
         while noRow < self.matrixTable.nrows:
             noRowData = self.matrixTable.row_values(noRow)
-            if noRowData[rowMsgName] != "":
-                numID = eval(noRowData[rowID])
+            if noRowData[colMsgName] != "":
+                numID = eval(noRowData[colID])
                 if numID > 0x7ff:
                     numID = numID | (1 << 31)
-                intID = str(numID)
-            elif noRowData[rowSgDescription] != "":
-                SignalName = noRowData[rowSgName]
-                SignalDescribe = "\"" + noRowData[rowSgDescription]+ "\";\n"
-                newContext = " ".join(["CM_", "SG_", intID, SignalName, SignalDescribe])
+                canID = str(numID)
+            elif noRowData[colSgDescription] != "":
+                SignalName = noRowData[colSgName]
+                SignalDescribe = "\"" + noRowData[colSgDescription]+ "\";\n"
+                newContext = " ".join(["CM_", "SG_", canID, SignalName, SignalDescribe])
                 self.dbc_fd.write(newContext)
             noRow+=1
 
-        self.dbc_fd.write(dbcEOFContext)
+        self.dbc_fd.write(dbcBADEFContext)
+        self.dbc_fd.write(dbcBADEFDEFContext)
+
+        noRow = 1
+        while noRow < self.matrixTable.nrows:
+            noRowData = self.matrixTable.row_values(noRow)
+            if noRowData[colMsgName] != "":
+                numID = eval(noRowData[colID])
+                if numID > 0x7ff:
+                    numID = numID | (1 << 31)
+                canID = str(numID)
+                if noRowData[colMsgSendType] == "Periodic":
+                    SignalCycle = str(int(noRowData[colMsgSendCycle]))
+                    newContext = " ".join(["BA_", "\"GenMsgCycleTime\"", "BO_", canID, SignalCycle, ";\n"])
+                    self.dbc_fd.write(newContext)
+            noRow+=1
 
 if __name__ == "__main__":
     excel = ExcelLoad("Template.xls")
